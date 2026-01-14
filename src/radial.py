@@ -2,7 +2,14 @@ import torch
 from dataclasses import dataclass
 from typing import Optional
 
-# rb = RadialBasis(rc=6.0, nmax=6, lam=5.0) nmax g0, g1...gn radial channel
+## class RadialBasis
+## Example: rb = RadialBasis(rc=6.0, nmax=6, lam=5.0)
+## rc: float, nmax: int (g0, g1...gn radial channel), lam: float
+## function radial_g(r, rc, nmax)
+## r: torch.float32 or torch.float64  example: r = torch.tensor(3.0) r = torch.tensor([1.0, 2.0])
+## NOT ALLOWED r = torch.tensor(3)
+## rc: float, nmax: int
+
 
 def cutoff_envelope(r: torch.Tensor, rc: float) -> torch.Tensor:
     """
@@ -119,27 +126,3 @@ class RadialBasis:
 
     def __call__(self, r: torch.Tensor) -> torch.Tensor:
         return radial_g(r, rc=self.rc, nmax=self.nmax, lam=self.lam, include_g0=self.include_g0)
-
-
-# -------------------------
-# Simple self-test (run manually)
-# -------------------------
-if __name__ == "__main__":
-    torch.set_printoptions(precision=6, sci_mode=False)
-
-    rc = 6.0
-    nmax = 5
-    r = torch.tensor([0.0, 1.0, 5.9, 6.0, 7.0], dtype=torch.float64, requires_grad=True)
-
-    g = radial_g(r, rc=rc, nmax=nmax, lam=5.0, include_g0=False)
-    print("g shape:", g.shape)  # (5, nmax)
-    print(g)
-
-    # Check cutoff: r>=rc => all zeros
-    assert torch.allclose(g[3], torch.zeros(nmax, dtype=g.dtype))
-    assert torch.allclose(g[4], torch.zeros(nmax, dtype=g.dtype))
-
-    # Check differentiability
-    loss = g.sum()
-    loss.backward()
-    print("dr loss:", r.grad)
